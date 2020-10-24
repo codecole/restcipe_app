@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:restcipe/api_manager/api.dart';
 import 'package:http/http.dart' as http;
 import 'package:restcipe/models/recipe_model.dart';
+import 'package:restcipe/screens/recipe_view.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -28,6 +30,9 @@ class _HomePageState extends State<HomePage> {
       RecipeModel recipeModel = new RecipeModel();
       recipeModel = RecipeModel.fromMap(element['recipe']);
       recipes.add(recipeModel);
+    });
+    setState(() {
+
     });
     print("${recipes.toString()}");
 //    print("$response this is response");
@@ -121,13 +126,38 @@ class _HomePageState extends State<HomePage> {
                               if (searchController.text.isNotEmpty) {
                                 getRecipe(searchController.text);
                                 print('Keep going');
-                              } else {
+                              }
+                              else {
                                 print('Enter a text');
                               }
                             },
                           ),
                         )
                       ],
+                    ),
+                  ),
+                  SizedBox(
+                    height: 32.0,
+                  ),
+                  Container(
+                    child: GridView(
+                      physics: ClampingScrollPhysics(),
+                      shrinkWrap: true,
+                      scrollDirection: Axis.vertical,
+                      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                        maxCrossAxisExtent: 200,mainAxisSpacing: 16.0,
+                      ) ,
+                      children:List.generate(recipes.length, (index) {
+                       return GridTile(
+                         child: RecipeTile(
+                             title: recipes[index].label,
+                             desc: recipes[index].source,
+                             imgUrl: recipes[index].image,
+                             url: recipes[index].url
+                         ),
+                       );
+                      })
+
                     ),
                   )
                 ],
@@ -140,19 +170,109 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class RecipeTile extends StatelessWidget {
+//class RecipeTile extends StatelessWidget {
+//
+//  String url, source, title, postUrl;
+//  RecipeTile({this.source,this.title, this.url, this.postUrl });
+//  @override
+//  Widget build(BuildContext context) {
+//    return Container(
+//      child: Stack(
+//        children: [
+//          Image.network(url),
+//          Container(
+//
+//          )
+//
+//        ],
+//      ),
+//    );
+//  }
+//}
+class RecipeTile extends StatefulWidget {
+  final String title, desc, imgUrl, url;
 
-  String url, source, title, postUrl;
-  RecipeTile({this.source,this.title, this.url, this.postUrl });
+  RecipeTile({this.title, this.desc, this.imgUrl, this.url});
+
+  @override
+  _RecipeTileState createState() => _RecipeTileState();
+}
+
+class _RecipeTileState extends State<RecipeTile> {
+  _launchURL(String url) async {
+    print(url);
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Stack(
-        children: [
-          Image.network(url),
-
-        ],
-      ),
+    return Wrap(
+      children: <Widget>[
+        GestureDetector(
+          onTap: () {
+            if (kIsWeb) {
+              _launchURL(widget.url);
+            } else {
+              print(widget.url + " this is what we are going to see");
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => RecipeView(
+                        postUrl: widget.url,
+                      )));
+            }
+          },
+          child: Container(
+            margin: EdgeInsets.all(8),
+            child: Stack(
+              children: <Widget>[
+                Image.network(
+                  widget.imgUrl,
+                  height: 200,
+                  width: 200,
+                  fit: BoxFit.cover,
+                ),
+                Container(
+                  width: 200,
+                  alignment: Alignment.bottomLeft,
+                  decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                          colors: [Colors.white30, Colors.white],
+                          begin: FractionalOffset.centerRight,
+                          end: FractionalOffset.centerLeft)),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          widget.title,
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.black54,
+                             ),
+                        ),
+                        Text(
+                          widget.desc,
+                          style: TextStyle(
+                              fontSize: 10,
+                              color: Colors.black54,
+                            fontWeight: FontWeight.bold
+                              ),
+                        )
+                      ],
+                    ),
+                  ),
+                )
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
