@@ -1,6 +1,6 @@
 # restcipe
 
-A recipe app built with flutter
+A recipe app built with flutter, search any ingredient and get recipes and how to prepare them
 
 ## Getting Started
 
